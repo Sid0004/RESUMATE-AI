@@ -4,7 +4,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 snapshots:
 
 First, run the development server:
-![Screenshot 2025-06-11 110136](https://github.com/user-attachments/assets/09d598ec-5a9c-4baf-9a2e-790ddab0626c)
+
+![Screenshot 2025-06-11 110031](https://github.com/user-attachments/assets/ecfd4b81-1b44-4a89-a1ef-8624852dc561)
+![Screenshot 2025-06-11 110053](https://github.com/user-attachments/assets/5bd0e2f6-ab6f-4299-9c0d-6b1b1723fb45)
+![Screenshot 2025-06-11 110118](https://github.com/user-attachments/assets/5874104b-fcfb-47b5-b648-dd7bc65c6ed1)
+![Screenshot 2025-06-11 110136](https://github.com/user-attachments/assets/1331c1a5-6675-4325-9fee-77e3c6728f3c)
+![Screenshot 2025-06-11 105930](https://github.com/user-attachments/assets/389ae0c2-a756-42f6-a1b6-7102ddce0fb5)
+
+
+
 
 ```bash
 npm run dev
