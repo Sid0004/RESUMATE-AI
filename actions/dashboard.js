@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 export const generateAIInsights = async (industry) => {
   const prompt = `
@@ -49,19 +49,34 @@ export async function getIndustryInsights() {
 
   if (!user) throw new Error("User not found");
 
-  // If no insights exist, generate them
-  if (!user.industryInsight) {
+  // If no insights exist, OR if they are stale (nextUpdate has passed), generate fresh ones
+  const isStale = user.industryInsight && new Date() > user.industryInsight.nextUpdate;
+
+  if (!user.industryInsight || isStale) {
     const insights = await generateAIInsights(user.industry);
 
-    const industryInsight = await db.industryInsight.create({
-      data: {
-        industry: user.industry,
-        ...insights,
-        nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    return industryInsight;
+    if (isStale) {
+      // Update existing record
+      const updatedInsight = await db.industryInsight.update({
+        where: { industry: user.industry },
+        data: {
+          ...insights,
+          lastUpdated: new Date(),
+          nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+      return updatedInsight;
+    } else {
+      // Create new record
+      const industryInsight = await db.industryInsight.create({
+        data: {
+          industry: user.industry,
+          ...insights,
+          nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+      return industryInsight;
+    }
   }
 
   return user.industryInsight;

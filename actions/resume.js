@@ -4,9 +4,11 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
+import connectToDatabase from "@/lib/mongodb";
+import ResumeVersion from "@/models/ResumeVersion";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 export async function saveResume(content) {
   const { userId } = await auth();
@@ -31,6 +33,20 @@ export async function saveResume(content) {
         content,
       },
     });
+
+    // MONGODB VERSION TRACKING:
+    // This logs every change to the resume content in our MongoDB cluster
+    // allowing for full historical rollbacks in the future.
+    try {
+      await connectToDatabase();
+      await ResumeVersion.create({
+        clerkUserId: userId,
+        content: content
+      });
+    } catch (mongoError) {
+      console.error("Non-fatal: Failed to save version history to MongoDB:", mongoError);
+      // We don't throw here so the main Postgres save still succeeds
+    }
 
     revalidatePath("/resume");
     return resume;
@@ -94,5 +110,29 @@ export async function improveWithAI({ current, type }) {
   } catch (error) {
     console.error("Error improving content:", error);
     throw new Error("Failed to improve content");
+  }
+}
+
+export async function getResumeVersions() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  try {
+    await connectToDatabase();
+    
+    // Fetch all versions for this user from MongoDB, newest first
+    const versions = await ResumeVersion.find({ clerkUserId: userId })
+      .sort({ savedAt: -1 })
+      .lean();
+      
+    // Serialize MongoDB objects (convert ObjectId to string for Next.js Server Actions)
+    return versions.map(v => ({
+      _id: v._id.toString(),
+      content: v.content,
+      savedAt: v.savedAt.toISOString(),
+    }));
+  } catch (error) {
+    console.error("Error fetching version history from MongoDB:", error);
+    return [];
   }
 }

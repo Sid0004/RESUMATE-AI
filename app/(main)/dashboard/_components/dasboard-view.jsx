@@ -29,8 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
 const DashboardView = ({ insights }) => {
-  // Transform salary data for the chart
-  const salaryData = insights.salaryRanges.map((range) => ({
+  // Transform salary data for the chart safely in case AI returns missing/malformed arrays
+  const salaryData = (insights.salaryRanges || []).map((range) => ({
     name: range.role,
     min: range.min / 1000,
     max: range.max / 1000,
@@ -105,9 +105,9 @@ const DashboardView = ({ insights }) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {insights.growthRate.toFixed(1)}%
+              {Number(insights.growthRate || 0).toFixed(1)}%
             </div>
-            <Progress value={insights.growthRate} className="mt-2" />
+            <Progress value={Number(insights.growthRate || 0)} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -133,7 +133,7 @@ const DashboardView = ({ insights }) => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-1">
-              {insights.topSkills.map((skill) => (
+              {(insights.topSkills || []).map((skill) => (
                 <Badge key={skill} variant="secondary">
                   {skill}
                 </Badge>
@@ -195,7 +195,7 @@ const DashboardView = ({ insights }) => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-              {insights.keyTrends.map((trend, index) => (
+              {(insights.keyTrends || []).map((trend, index) => (
                 <li key={index} className="flex items-start space-x-2">
                   <div className="h-2 w-2 mt-2 rounded-full bg-primary" />
                   <span>{trend}</span>
@@ -212,7 +212,7 @@ const DashboardView = ({ insights }) => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {insights.recommendedSkills.map((skill) => (
+              {(insights.recommendedSkills || []).map((skill) => (
                 <Badge key={skill} variant="outline">
                   {skill}
                 </Badge>

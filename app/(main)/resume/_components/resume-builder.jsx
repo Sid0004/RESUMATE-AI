@@ -24,6 +24,7 @@ import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
 import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
+import VersionHistory from "@/components/VersionHistory";
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -155,7 +156,18 @@ export default function ResumeBuilder({ initialContent }) {
         <div className="space-x-2">
   {/* Save Button */}
   <Button
-    onClick={handleSubmit(onSubmit)}
+    onClick={async () => {
+      if (activeTab === "edit") {
+        // Run full form validation if on the edit tab
+        await handleSubmit(onSubmit, (errors) => {
+          toast.error("Please fill out all required fields.");
+          console.log("Form errors:", errors);
+        })();
+      } else {
+        // If on the markdown or history tab, just save the preview content directly
+        onSubmit();
+      }
+    }}
     disabled={isSaving}
     className="bg-red-100 hover:bg-red-200 text-red-700"
   >
@@ -197,7 +209,20 @@ export default function ResumeBuilder({ initialContent }) {
         <TabsList>
           <TabsTrigger value="edit">Form</TabsTrigger>
           <TabsTrigger value="preview">Markdown</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="history">
+          <div className="flex justify-center bg-muted/20 p-6 rounded-lg min-h-[500px]">
+            <VersionHistory 
+              onRestore={(content) => {
+                setPreviewContent(content);
+                setActiveTab("preview");
+                toast.success("Restored previous version!");
+              }} 
+            />
+          </div>
+        </TabsContent>
 
         <TabsContent value="edit">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
