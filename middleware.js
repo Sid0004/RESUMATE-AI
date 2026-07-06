@@ -1,5 +1,6 @@
 import { clerkMiddleware,createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+// import { auth as nextAuthMiddleware } from "@/auth"; // For when switching to Auth.js
 
 const isProtectedRouter= createRouteMatcher([
     "/dashboard(.*)",
@@ -18,6 +19,19 @@ export default clerkMiddleware( async(auth,req)=>{
    }
    return NextResponse.next();
 });
+
+/* 
+// --- AUTH.JS MIDDLEWARE IMPLEMENTATION (Pending full migration) ---
+// export default nextAuthMiddleware((req) => {
+//   const isLoggedIn = !!req.auth;
+//   const isProtected = isProtectedRouter(req);
+//   
+//   if (!isLoggedIn && isProtected) {
+//     return NextResponse.redirect(new URL("/login-custom", req.nextUrl));
+//   }
+//   return NextResponse.next();
+// });
+*/
 
 export const config = {
   matcher: [
